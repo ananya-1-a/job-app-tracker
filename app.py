@@ -6,6 +6,7 @@ from extensions import db
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from models.company import Company 
+from flasgger import Swagger
 load_dotenv()
 def create_app():
     # 1. Initialize the app
@@ -22,6 +23,28 @@ def create_app():
     migrate=Migrate(app,db)
 
     jwt=JWTManager(app)
+    swagger_template = {
+        "swagger": "2.0",
+        "info": {
+            "title": "Job Application & AI Coach API",
+            "description": "A production-grade backend for tracking applications and generating AI interview prep.",
+            "version": "1.0.0"
+        },
+        "securityDefinitions": {
+            "Bearer": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header",
+                "description": "Enter the word 'Bearer' followed by a space and then your JWT token. Example: Bearer eyJhb..."
+            }
+        },
+        "security": [
+            {
+                "Bearer": []
+            }
+        ]
+    }
+    Swagger(app, template=swagger_template)
     from routes.company_routes import company_bp
     app.register_blueprint(company_bp)
     

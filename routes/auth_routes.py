@@ -6,6 +6,38 @@ auth_bp=Blueprint('auth',__name__)
 
 @auth_bp.route('/signup',methods=['POST'])
 def signup():
+    """
+    User Registration
+    Create a new account by providing a username, email, and password.
+    ---
+    tags:
+      - Authentication
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - email
+            - password
+          properties:
+            username:
+              type: string
+              example: "new_developer"
+            email:
+              type: string
+              example: "dev@example.com"
+            password:
+              type: string
+              example: "securepassword123"
+    responses:
+      201:
+        description: User created successfully
+      400:
+        description: Registration failed (e.g., username/email already exists)
+    """
     data=request.get_json()
     if User.query.filter_by(email=data.get('email')).first():
         return jsonify({"Error":"Email already registered"}),400
@@ -22,6 +54,34 @@ def signup():
     return jsonify({"message": "User created successfully!"}), 201
 @auth_bp.route('/login',methods=['POST'])
 def login():
+    """
+    User Login
+    Authenticate with email and password to receive a JWT token.
+    ---
+    tags:
+      - Authentication
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              example: "dev@example.com"
+            password:
+              type: string
+              example: "securepassword123"
+    responses:
+      200:
+        description: Returns the JWT access token
+      401:
+        description: Invalid credentials
+    """
     data=request.get_json()
 
     user=User.query.filter_by(email=data.get('email')).first()
