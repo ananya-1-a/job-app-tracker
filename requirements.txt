@@ -5,3 +5,4 @@ google-generativeai
 fpdf2
 gunicorn
 psycopg2-binary
+python-dotenv
