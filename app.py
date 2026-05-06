@@ -64,6 +64,7 @@ def create_app():
         from models.job_application import JobApplication
         db.create_all()
     return app
+app = create_app()
 if __name__ == "__main__":
-    app = create_app()
+    
     app.run(debug=True)
