@@ -1,7 +1,11 @@
 .env
 __pycache__/
 *.pyc
+env/
+*.pdf
 job_tracker.db
 instance/
 venv/
 .vscode/
+.db
+.sqlite3

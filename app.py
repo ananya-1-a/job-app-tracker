@@ -12,8 +12,11 @@ def create_app():
     # 1. Initialize the app
     app = Flask(__name__)
     app.config.from_object(config)
-
-    app.config['SQLALCHEMY_DATABSE_URI']='sqlite:///job_tracker.db'
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,  
+    "pool_recycle": 300,    
+    }
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///models.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 
     app.config['JWT_SECRET_KEY']= os.getenv('JWT_SECRET_KEY')
@@ -31,7 +34,7 @@ def create_app():
             "version": "1.0.0"
         },
         "securityDefinitions": {
-            "Bearer": {
+            "BearerAuth": {
                 "type": "apiKey",
                 "name": "Authorization",
                 "in": "header",
