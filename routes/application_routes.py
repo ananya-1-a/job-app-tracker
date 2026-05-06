@@ -13,7 +13,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 application_bp = Blueprint('applications', __name__)
 
-
+client = genai.Client()
 @application_bp.route('/applications', methods=['GET'])
 @jwt_required()
 def get_applications():
