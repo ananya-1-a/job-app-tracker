@@ -7,6 +7,9 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from models.company import Company 
 from flasgger import Swagger
+import sys
+print(f"PYTHONPATH: {sys.path}")
+print(f"DATABASE_URL_LOADED: {os.getenv('DATABASE_URL') is not None}")
 load_dotenv()
 def create_app():
     # 1. Initialize the app
