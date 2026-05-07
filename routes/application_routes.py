@@ -130,6 +130,9 @@ def add_application():
             website:
               type: string
               description: "Company URL"
+            notes:
+              type: string
+              description: "Paste job description, requirements, or specific details for AI generation."
     responses:
       201:
         description: Application added successfully
@@ -143,13 +146,10 @@ def add_application():
     if not data.get('role') or not company_name:
         return jsonify({"error": "Role and company_name are strictly required."}), 400
 
-    
     location = data.get('location')
     website = data.get('website')
     
-    
     company = Company.query.filter_by(name=company_name).first()
-    
     
     if not company:
         company = Company(
@@ -174,7 +174,8 @@ def add_application():
         status=incoming_status,
         user_id=current_user_id,
         company_id=company.id,  
-        current_round=incoming_round
+        current_round=incoming_round,
+        notes=data.get('notes')  
     )
     
     db.session.add(new_app)
@@ -289,7 +290,7 @@ def update_application(app_id):
             "message": f"Application {app_id} updated successfully!",
             "status": app_to_update.status,
             "current_round": app_to_update.current_round,
-            "note": app_to_update.note # Change to 'notes' if plural in models!
+            "notes": app_to_update.notes 
         }), 200
     except Exception as e:
         db.session.rollback()
