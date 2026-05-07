@@ -10,10 +10,24 @@ from models.company import Company
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
-
 application_bp = Blueprint('applications', __name__)
 
 client = genai.Client()
+def sanitize_for_pdf(text):
+    """Replaces Unicode characters with ASCII equivalents to prevent fpdf2 crashes."""
+    replacements = {
+        "‘": "'", "’": "'",   # Smart single quotes
+        "“": '"', "”": '"',   # Smart double quotes
+        "—": "-", "–": "-",   # Em and En dashes
+        "…": "...",           # Ellipsis
+        "\u2022": "-",        # Bullet points
+    }
+    for search, replace in replacements.items():
+        text = text.replace(search, replace)
+    
+    # Safety net: Force to latin-1 and ignore what it can't handle
+    return text.encode('latin-1', 'replace').decode('latin-1')
+
 @application_bp.route('/applications', methods=['GET'])
 @jwt_required()
 def get_applications():
@@ -485,12 +499,13 @@ def generate_cover_letter(app_id):
             model='gemini-2.5-flash',
             contents=full_prompt
         )
+        safe_text = sanitize_for_pdf(response.text)
+
         
-        # Generate the PDF
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Helvetica", size=11)
-        pdf.multi_cell(0, 6, text=response.text)
+        pdf.multi_cell(0, 6, text=safe_text)
         
         file_path = f"Cover_Letter_App_{app_id}.pdf"
         pdf.output(file_path)
