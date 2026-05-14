@@ -146,15 +146,13 @@ def add_application():
     if not data.get('role') or not company_name:
         return jsonify({"error": "Role and company_name are strictly required."}), 400
 
-    location = data.get('location')
     website = data.get('website')
     
     company = Company.query.filter_by(name=company_name).first()
     
     if not company:
         company = Company(
-            name=company_name, 
-            location=location, 
+            name=company_name,  
             website=website
         )
         db.session.add(company)
@@ -175,6 +173,7 @@ def add_application():
         user_id=current_user_id,
         company_id=company.id,  
         current_round=incoming_round,
+        location=data.get('location'),
         notes=data.get('notes')  
     )
     

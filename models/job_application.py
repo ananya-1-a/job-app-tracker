@@ -9,6 +9,7 @@ class JobApplication(db.Model):
     company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     role = db.Column(db.String(150), nullable=False)
     status = db.Column(db.String(50), default="Applied")
+    location=db.Column(db.String(200))
     applied_date = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.Text)
     current_round=db.Column(db.String(100),nullable=True,default='Initial Application')
