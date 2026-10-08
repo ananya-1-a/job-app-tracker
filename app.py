@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask,jsonify
 from config import config
 from extensions import db
 from flask_migrate import Migrate
@@ -12,18 +12,14 @@ load_dotenv()
 print(f"PYTHONPATH: {sys.path}")
 print(f"DATABASE_URL_LOADED: {os.getenv('DATABASE_URL') is not None}")
 
-def create_app():
+def create_app(config_name="default"):
     # 1. Initialize the app
     app = Flask(__name__)
-    app.config.from_object(config)
+    app.config.from_object(config[config_name])
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True,  
     "pool_recycle": 300,    
     }
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///models.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
-
-    app.config['JWT_SECRET_KEY']= os.getenv('JWT_SECRET_KEY')
     
     
     db.init_app(app)
@@ -37,6 +33,10 @@ def create_app():
             "description": "A production-grade backend for tracking applications and generating AI interview prep.",
             "version": "1.0.0"
         },
+        "schemes": [
+            "https",
+            "http"
+        ],
         "securityDefinitions": {
             "BearerAuth": {
                 "type": "apiKey",
@@ -61,6 +61,26 @@ def create_app():
     from routes.auth_routes import auth_bp
     app.register_blueprint(auth_bp)
 
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"error":"Route not found"}),404
+    
+    @app.errorhandler(500)
+    def internal_error(e):
+        return jsonify({"error":"Internal server error"}),500
+    
+    @ jwt.expired_token_loader
+    def expired_token_callback(jwt_header,jwt_data):
+        return jsonify({"error":"Token has expired"}),401
+    
+    @jwt.invalid_token_loader
+    def invalid_token_callback(reason):
+        return jsonify({"error":"Missing or invalid token"}),401
+    
+    @jwt.unauthorized_loader
+    def unauthorized_token_callback(reason):
+        return jsonify({"error":"Unauthorized token"}),401
+    
     # 3. Build the Database
     with app.app_context():
         from models.user import User
