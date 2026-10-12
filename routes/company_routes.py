@@ -45,7 +45,6 @@ def add_company():
         
     new_company = Company(
         name=data.get('name'),
-        location=data.get('location'),
         website=data.get('website')
     )
     db.session.add(new_company)
