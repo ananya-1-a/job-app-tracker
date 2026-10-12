@@ -3,7 +3,7 @@ from fpdf import FPDF
 import os
 from google import genai
 from flask_migrate import Migrate
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from extensions import db
 from models.job_application import JobApplication
 from models.company import Company
@@ -12,20 +12,20 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 application_bp = Blueprint('applications', __name__)
 
-client = genai.Client()
+
 def sanitize_for_pdf(text):
     """Replaces Unicode characters with ASCII equivalents to prevent fpdf2 crashes."""
     replacements = {
-        "‘": "'", "’": "'",   # Smart single quotes
-        "“": '"', "”": '"',   # Smart double quotes
-        "—": "-", "–": "-",   # Em and En dashes
-        "…": "...",           # Ellipsis
-        "\u2022": "-",        # Bullet points
+        "‘": "'", "’": "'",   
+        "“": '"', "”": '"',   
+        "—": "-", "–": "-",   
+        "…": "...",           
+        "\u2022": "-",        
     }
     for search, replace in replacements.items():
         text = text.replace(search, replace)
     
-    # Safety net: Force to latin-1 and ignore what it can't handle
+    
     return text.encode('latin-1', 'replace').decode('latin-1')
 
 @application_bp.route('/applications', methods=['GET'])
@@ -79,7 +79,7 @@ def get_applications():
             "id": app.id,
             "role": app.role,
             "status": app.status,
-            "company_nane": app.company.name if app.company else "unknown"
+            "company_name": app.company.name if app.company else "unknown"
         })
         
     return jsonify({
@@ -139,48 +139,55 @@ def add_application():
       400:
         description: Missing required fields or invalid status
     """
-    current_user_id = get_jwt_identity()
-    data = request.get_json()
+    try:
+        current_user_id = get_jwt_identity()
+        data = request.get_json(silent=True)
+        if not data: 
+            return jsonify({"error": "No data provided"}), 400
     
-    company_name = data.get('company_name')
-    if not data.get('role') or not company_name:
-        return jsonify({"error": "Role and company_name are strictly required."}), 400
+        company_name = data.get('company_name')
+        if not data.get('role') or not company_name:
+            return jsonify({"error": "Role and company_name are strictly required."}), 400
 
-    website = data.get('website')
+        website = data.get('website')
     
-    company = Company.query.filter_by(name=company_name).first()
+        company = Company.query.filter_by(name=company_name).first()
     
-    if not company:
-        company = Company(
-            name=company_name,  
-            website=website
+        if not company:
+            company = Company(
+                name=company_name,  
+                website=website
+            )
+            db.session.add(company)
+            db.session.flush() 
+
+        valid_status = ['Applied', 'Interviewing', 'Rejected', 'Offer']
+        incoming_status = data.get('status', 'Applied')
+
+        if incoming_status not in valid_status:
+            return jsonify({"error": f"Invalid status. Must be one of {valid_status}"}), 400
+    
+        incoming_round = data.get('current_round', 'Initial Application')
+    
+    
+        new_app = JobApplication(
+            role=data.get('role'),
+            status=incoming_status,
+            user_id=current_user_id,
+            company_id=company.id,  
+            current_round=incoming_round,
+            location=data.get('location'),
+            notes=data.get('notes')  
         )
-        db.session.add(company)
-        db.session.commit() 
-
-    valid_status = ['Applied', 'Interviewing', 'Rejected', 'Offer']
-    incoming_status = data.get('status', 'Applied')
-
-    if incoming_status not in valid_status:
-        return jsonify({"error": f"Invalid status. Must be one of {valid_status}"}), 400
     
-    incoming_round = data.get('current_round', 'Initial Application')
+        db.session.add(new_app)
+        db.session.commit()
     
-    
-    new_app = JobApplication(
-        role=data.get('role'),
-        status=incoming_status,
-        user_id=current_user_id,
-        company_id=company.id,  
-        current_round=incoming_round,
-        location=data.get('location'),
-        notes=data.get('notes')  
-    )
-    
-    db.session.add(new_app)
-    db.session.commit()
-    
-    return jsonify({"message": f"Application for {company.name} added successfully!"}), 201
+        return jsonify({"message": f"Application for {company.name} added successfully!"}), 201
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"add_application failed: {e}")
+        return jsonify({"error":"Internal server error"}),500
 @application_bp.route('/applications/<int:app_id>', methods=['DELETE'])
 @jwt_required()
 def delete_application(app_id):
