@@ -13,8 +13,7 @@ class JobApplication(db.Model):
     applied_date = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.Text)
     current_round=db.Column(db.String(100),nullable=True,default='Initial Application')
-    # I REMOVED THE TWO db.relationship LINES FROM HERE. 
-    # user.py file is already handling this automatically!
+    
 
     def __repr__(self):
         return f"<JobApplication {self.role} at {self.company_id}>"
