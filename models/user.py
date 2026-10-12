@@ -1,5 +1,6 @@
 from extensions import db
-from werkzeug.security import generate_password_hash, check_password_hash
+
+from extensions import bcrypt
 class User(db.Model):
     __tablename__="users"
     id=db.Column(db.Integer,primary_key=True)
@@ -9,10 +10,9 @@ class User(db.Model):
 
     application=db.relationship('JobApplication',backref='user',lazy=True)
 
-    def set_password(self,raw_password):
-        self.password=generate_password_hash(raw_password)
-    
+    def set_password(self, raw_password):
+          self.password=bcrypt.generate_password_hash(raw_password).decode('utf-8')
     def check_password(self,raw_password):
-        return check_password_hash(self.password,raw_password)
-def __repr__(self):
-        return f"<User {self.email}>"   
+          return bcrypt.check_password_hash(self.password,raw_password)
+    def __repr__(self):
+          return f"<User {self.email}>"   
