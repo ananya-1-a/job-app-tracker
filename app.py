@@ -2,9 +2,8 @@ import os
 from dotenv import load_dotenv
 from flask import Flask,jsonify
 from config import config
-from extensions import db
+from extensions import db, jwt, bcrypt 
 from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager
 from models.company import Company 
 from flasgger import Swagger
 import sys
@@ -23,9 +22,11 @@ def create_app(config_name="default"):
     
     
     db.init_app(app)
+    bcrypt.init_app(app)
+    jwt.init_app(app)
     migrate=Migrate(app,db)
 
-    jwt=JWTManager(app)
+    
     swagger_template = {
         "swagger": "2.0",
         "info": {
