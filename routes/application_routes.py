@@ -116,7 +116,7 @@ def add_application():
               example: "Backend Developer"
             company_name:
               type: string
-              example: "Accenture"
+              example: "XYZ"
             status:
               type: string
               enum: ['Applied', 'Interviewing', 'Rejected', 'Offer']
