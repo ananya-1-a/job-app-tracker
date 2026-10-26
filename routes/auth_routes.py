@@ -1,4 +1,4 @@
-from flask import Blueprint,request,jsonify
+from flask import Blueprint,request,jsonify,current_app
 from extensions import db
 from models.user import User
 from flask_jwt_extended import create_access_token
@@ -103,7 +103,7 @@ def login():
 
     email=data.get('email')
     password=data.get('password')
-    if not email or password:
+    if not email or not password:
         return jsonify({"error": "email and password are required"}), 400
 
     user=User.query.filter_by(email=data.get('email')).first()
