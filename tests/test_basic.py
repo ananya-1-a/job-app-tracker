@@ -19,3 +19,8 @@ def test_login_with_correct_password_succeeds():
     })
     assert response.status_code==200
     assert "token" in response.get_json()
+
+def test_login_with_missing_password_fails():
+    client=app.test_client()
+    response=client.post("login",json={"email":"login_test@example.com"})
+    assert response.status_code==400
