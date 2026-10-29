@@ -24,3 +24,14 @@ def test_login_with_missing_password_fails():
     client=app.test_client()
     response=client.post("login",json={"email":"login_test@example.com"})
     assert response.status_code==400
+
+def test_register_new_user_succeeds():
+    client=app.test_client()
+    response=client.post("signup",json={
+        "username":"register_user",
+        "email":"register_test@gmail.com",
+        "password":"Test12345"
+    })
+    assert response.status_code==201
+
+
